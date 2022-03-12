@@ -3,31 +3,24 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"reflect"
-	"runtime"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello! HandlerFunc~")
+func hello(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	fmt.Fprintf(w, "hello, %s \n", p.ByName("name"))
 }
 
-func log(h http.HandlerFunc) http.HandlerFunc { 
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name()
-		fmt.Println("Handler function called : " + name)
-		h(w, r)
-	}
-}
 
 func main () {
 	fmt.Println("HTTP srerver is running")
 
+	mux := httprouter.New()
+	mux.GET("/hello/:name", hello)
+
 	server := http.Server {
 		Addr: "127.0.0.1:8080",
-
+		Handler: mux,
 	}
-
-	http.HandleFunc("/hello", log(hello))
-
 	server.ListenAndServe()
 }
